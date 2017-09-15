@@ -1,1 +1,1 @@
-include ':app', ':log', ':common-libs', ':log-no-op', ':app-master'
+include ':app', ':log', ':common-libs', ':log-no-op', ':app-master', ':easemob-sdk', ':common-android-util', ':pulltorefresh'
