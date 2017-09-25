@@ -29,15 +29,6 @@ public class MessageAdapter extends BaseAdapter {
         this.context = context;
     }
 
-    public void notifyDataSetChangedOnUIThread() {
-        new Handler().post(new Runnable() {
-            @Override
-            public void run() {
-                notifyDataSetChanged();
-            }
-        });
-    }
-
     @Override
     public int getCount() {
         return messageList == null ? 0 : messageList.size();
@@ -65,7 +56,7 @@ public class MessageAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         EMMessage emMessage = (EMMessage) getItem(position);
-        String msgTime = DateUtil.date2Str(new Date(emMessage.getMsgTime()), "yyyy-MM-dd hh:mm:ss");
+        String msgTime = DateUtil.date2Str(new Date(emMessage.getMsgTime()), "yyyy-MM-dd HH:mm:ss");
         viewHolder.tv_message_text.setText("[" + msgTime + "] " + emMessage.getBody());
         return convertView;
     }

@@ -63,7 +63,7 @@ public class ConversationAdapter extends BaseAdapter {
             EMConversation conversation = (EMConversation) getItem(position);
             final EMMessage lastMessage = conversation.getLastMessage();
             viewHolder.tv_client_name.setText(lastMessage.getFrom());
-            viewHolder.tv_last_msg_time.setText(DateUtil.date2Str(new Date(lastMessage.getMsgTime()), "yyyyMMdd hh:mm:ss"));
+            viewHolder.tv_last_msg_time.setText(DateUtil.date2Str(new Date(lastMessage.getMsgTime()), "yyyyMMdd HH:mm:ss"));
             viewHolder.tv_last_msg.setText(lastMessage.getBody().toString());
             viewHolder.tv_unread_count.setText(conversation.getUnreadMsgCount() + "");
         } catch (Exception e) {

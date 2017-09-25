@@ -68,6 +68,8 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         EMConversation emConversation = EMClient.getInstance().chatManager().getConversation("trackermaster");
         Logger.d("cybClient", "ChatFragment emConversation=" + emConversation);
         if(emConversation != null) {
+            emConversation.loadMoreMsgFromDB(emConversation.getLastMessage().getMsgId(), 1000);
+
             List<EMMessage> messages = emConversation.getAllMessages();
             messageList.addAll(messages);
             messageAdapter.notifyDataSetChanged();
@@ -112,7 +114,12 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
             if (emConversation != null) {
                 messageList.clear();
                 messageList.addAll(emConversation.getAllMessages());
-                messageAdapter.notifyDataSetChangedOnUIThread();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        messageAdapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
 
@@ -130,7 +137,12 @@ public class ChatFragment extends Fragment implements View.OnClickListener {
         public void onMessageDelivered(List<EMMessage> messages) {
 
             if (messageAdapter != null) {
-                messageAdapter.notifyDataSetChangedOnUIThread();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        messageAdapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
 

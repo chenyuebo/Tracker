@@ -25,6 +25,8 @@ public class TKApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
+        Logger.d("cybClient", "TKApplication onCreate");
+
         ToastUtil.init(this);
         String processAppName = ProcessUtil.getProcessName(this, Process.myPid());
         if (this.getPackageName().equals(processAppName)) { // 在主进程初始化环信

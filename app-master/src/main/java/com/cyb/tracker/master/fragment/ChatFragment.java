@@ -2,12 +2,15 @@ package com.cyb.tracker.master.fragment;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ListView;
 
+import com.cyb.android.util.VibrateUtil;
 import com.cyb.log.Logger;
 import com.cyb.tracker.master.R;
 import com.cyb.tracker.master.adapter.MessageAdapter;
@@ -36,6 +39,8 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
     private String hxUserId;
     private String userNickName;
 
+    private Vibrator vibrator;
+
     public ChatFragment() {
         super();
     }
@@ -43,9 +48,6 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chat, container, false);
-
-        EMClient.getInstance().chatManager().addMessageListener(emMessageListener);
-        EMClient.getInstance().addConnectionListener(emConnectionListener);
 
         return view;
     }
@@ -57,6 +59,9 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
         initView();
 
         initData();
+
+        EMClient.getInstance().chatManager().addMessageListener(emMessageListener);
+        EMClient.getInstance().addConnectionListener(emConnectionListener);
     }
 
     private void initView() {
@@ -68,6 +73,7 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
         pl_refresh_message.setOnRefreshListener(this);
         lv_message = pl_refresh_message.getRefreshableView();
         lv_message.setDividerHeight(0);
+        lv_message.setStackFromBottom(true);
 
         View emptyView = LayoutInflater.from(getContext()).inflate(R.layout.view_empty_message, null);
         lv_message.setEmptyView(emptyView);
@@ -75,6 +81,25 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
         messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(messageList, getContext());
         lv_message.setAdapter(messageAdapter);
+
+        lv_message.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                switch (scrollState){
+                    case SCROLL_STATE_IDLE:
+                        break;
+                    case SCROLL_STATE_FLING:
+                        break;
+                    case SCROLL_STATE_TOUCH_SCROLL:
+                        break;
+                }
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+
+            }
+        });
     }
 
     private void initData() {
@@ -121,12 +146,25 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
     EMMessageListener emMessageListener = new EMMessageListener() {
         @Override
         public void onMessageReceived(List<EMMessage> messages) {
+            Logger.d("cybHost", "ChatFragment onMessageReceived=" + messages);
+
             EMConversation emConversation = EMClient.getInstance().chatManager().getConversation(hxUserId);
             Logger.d("cybHost", "ChatFragment emConversation=" + emConversation);
+
             if (emConversation != null) {
+                final int pageSize = 1000;
+                emConversation.loadMoreMsgFromDB(emConversation.getLastMessage().getMsgId(), pageSize);
+
                 messageList.clear();
                 messageList.addAll(emConversation.getAllMessages());
-                messageAdapter.notifyDataSetChangedOnUIThread();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        messageAdapter.notifyDataSetChanged();
+                        lv_message.setSelection(messageAdapter.getCount());
+                        vibrator = VibrateUtil.vibrate(getContext());
+                    }
+                });
             }
         }
 
@@ -144,7 +182,12 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
         public void onMessageDelivered(List<EMMessage> messages) {
 
             if (messageAdapter != null) {
-                messageAdapter.notifyDataSetChangedOnUIThread();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        messageAdapter.notifyDataSetChanged();
+                    }
+                });
             }
         }
 
@@ -169,8 +212,13 @@ public class ChatFragment extends BaseFragment implements PullToRefreshListView.
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
         EMClient.getInstance().chatManager().removeMessageListener(emMessageListener);
         EMClient.getInstance().removeConnectionListener(emConnectionListener);
+
+        if(vibrator != null){
+            VibrateUtil.cancel(vibrator);
+        }
     }
 
 }
